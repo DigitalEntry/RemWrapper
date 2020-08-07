@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -8,10 +8,12 @@ namespace RemAPIWrapper
 	public class RemAPI
 	{
 		private string Token;
+		private string ClientId;
 
-		public RemAPI(string Token)
+		public RemAPI(string Token, string ClientId)
 		{
 			this.Token = Token;
+			this.ClientId = ClientId;
 		}
 
 		public async Task<string> Rem()
@@ -19,6 +21,7 @@ namespace RemAPIWrapper
 			using (HttpClient client = new HttpClient())
 			{
 				client.DefaultRequestHeaders.Add("Token", Token);
+				client.DefaultRequestHeaders.Add("ClientId", ClientId);
 				HttpResponseMessage response = await client.GetAsync("https://api.rembot.cc/images/sfw/rem");
 				HttpContent content = response.Content;
 
@@ -39,6 +42,7 @@ namespace RemAPIWrapper
 			using (HttpClient client = new HttpClient())
 			{
 				client.DefaultRequestHeaders.Add("Token", Token);
+				client.DefaultRequestHeaders.Add("ClientId", ClientId);
 				HttpResponseMessage response = await client.GetAsync("https://api.rembot.cc/images/nsfw/rem");
 				HttpContent content = response.Content;
 
@@ -59,6 +63,7 @@ namespace RemAPIWrapper
 			using (HttpClient client = new HttpClient())
 			{
 				client.DefaultRequestHeaders.Add("Token", Token);
+				client.DefaultRequestHeaders.Add("ClientId", ClientId);
 				HttpResponseMessage response = await client.GetAsync("https://api.rembot.cc/images/nsfw/thighs");
 				HttpContent content = response.Content;
 
