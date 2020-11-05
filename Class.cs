@@ -58,10 +58,6 @@ namespace RemAPIWrapper
 			public ulong UserId { get; private set; }
 			public BigInteger Bal { get; private set; }
 			public BigInteger Xp { get; private set; }
-			
-			//
-			// Summary:
-			//     Checks if the user is blacklisted, If the user is blacklisted you will not be able to update them.
 			public bool Blacklisted { get; private set; }
 			public int Level { get; private set; }
 		}
