@@ -27,7 +27,9 @@ namespace RemAPIWrapper
 			Ram = 2,
 			Thighs = 3
 		}
-
+		/// <summary>Get an image with a certain type
+		/// <para>Returns <see cref="string"/></para>
+		/// </summary>
 		public async Task<string> GetImage(ImageType Type, bool IsNSFW)
 		{
 			if (Type == ImageType.Thighs && !IsNSFW)
@@ -56,12 +58,24 @@ namespace RemAPIWrapper
 		public class User
 		{
 			public ulong UserId { get; private set; }
+			/// <summary>The amount of money a user has
+			/// </summary>
 			public BigInteger Bal { get; private set; }
+			/// <summary>The amount of experience points a user has
+			/// </summary>
 			public BigInteger Xp { get; private set; }
+
+			/// <summary>Checks if the user is blacklisted, If the user is blacklisted you will not be able to update them.
+			/// </summary>
 			public bool Blacklisted { get; private set; }
+			/// <summary>The level a user is, The more experience points they have the higher the level 
+			/// </summary>
 			public int Level { get; private set; }
 		}
 
+		/// <summary>Get a users information
+		/// <para>Returns <see cref="User"/></para>
+		/// </summary>
 		public async Task<User> GetUser(ulong UserId)
 		{
 			HttpClient Client = new HttpClient();
@@ -82,6 +96,8 @@ namespace RemAPIWrapper
 			return User;
 		}
 
+		/// <summary>Update a users balance, you can only update the same user every 15 seconds
+		/// </summary>
 		public async Task UpdateUser(ulong UserId, BigInteger Bal)
 		{
 			HttpClient Client = new HttpClient();
