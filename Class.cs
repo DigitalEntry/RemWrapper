@@ -36,6 +36,10 @@ namespace RemAPIWrapper
 			{
 				throw new Exception("NSFW must be true for Thighs endpoint");
 			}
+			else if ((Type == ImageType.Emilia || Type == ImageType.Ram) && !IsNSFW)
+			{
+				throw new Exception("No NSFW images for Emilia or Ram");
+			}
 
 			HttpClient Client = new HttpClient();
 			Client.DefaultRequestHeaders.Add("Authorization", Token);
