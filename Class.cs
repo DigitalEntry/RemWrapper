@@ -1,6 +1,9 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Numerics;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace RemAPIWrapper
@@ -8,75 +11,92 @@ namespace RemAPIWrapper
 	public class RemAPI
 	{
 		private string Token;
-		private string ClientId;
+		private ulong ClientId;
 
-		public RemAPI(string Token, string ClientId)
+		public RemAPI(string Token, ulong ClientId)
 		{
 			this.Token = Token;
 			this.ClientId = ClientId;
 		}
 
-		public async Task<string> Rem()
+		public enum ImageType
 		{
-			using (HttpClient client = new HttpClient())
-			{
-				client.DefaultRequestHeaders.Add("Token", Token);
-				client.DefaultRequestHeaders.Add("ClientId", ClientId);
-				HttpResponseMessage response = await client.GetAsync("https://api.rembot.cc/images/sfw/rem");
-				HttpContent content = response.Content;
-
-				string result = await content.ReadAsStringAsync();
-				if (response.StatusCode == HttpStatusCode.OK)
-				{
-					return result;
-				}
-				else
-				{
-					throw new HttpListenerException(int.Parse(response.StatusCode.ToString()), $"Server returned an error. {response.StatusCode} {result}");
-				}
-			}
+			Rem = 0,
+			Emilia = 1,
+			Ram = 2,
+			Thighs = 3
 		}
 
-		public async Task<string> LewdRem()
+		public async Task<string> GetImage(ImageType Type, bool IsNSFW)
 		{
-			using (HttpClient client = new HttpClient())
+			if (Type == ImageType.Thighs && !IsNSFW)
 			{
-				client.DefaultRequestHeaders.Add("Token", Token);
-				client.DefaultRequestHeaders.Add("ClientId", ClientId);
-				HttpResponseMessage response = await client.GetAsync("https://api.rembot.cc/images/nsfw/rem");
-				HttpContent content = response.Content;
-
-				string result = await content.ReadAsStringAsync();
-				if (response.StatusCode == HttpStatusCode.OK)
-				{
-					return result;
-				}
-				else
-				{
-					throw new HttpListenerException(int.Parse(response.StatusCode.ToString()), $"Server returned an error. {response.StatusCode} {result}");
-				}
+				throw new Exception("NSFW must be true for Thighs endpoint");
 			}
+
+			HttpClient Client = new HttpClient();
+			Client.DefaultRequestHeaders.Add("Authorization", Token);
+			Client.DefaultRequestHeaders.Add("ClientId", ClientId.ToString());
+
+			var request = new HttpRequestMessage
+			{
+				Method = HttpMethod.Get,
+				RequestUri = new Uri("https://api.rembot.cc/api/v1/images"),
+				Content = new StringContent($@"{{
+				""ImageType"":""{Type}"",
+				""IsNsfw"":""{IsNSFW}""}}", Encoding.UTF8, "application/json"),
+			};
+			var response = await Client.SendAsync(request).ConfigureAwait(false);
+			response.EnsureSuccessStatusCode();
+			var responseInfo = await response.Content.ReadAsStringAsync();
+			return responseInfo;
 		}
 
-		public async Task<string> Thighs()
+		public class User
 		{
-			using (HttpClient client = new HttpClient())
-			{
-				client.DefaultRequestHeaders.Add("Token", Token);
-				client.DefaultRequestHeaders.Add("ClientId", ClientId);
-				HttpResponseMessage response = await client.GetAsync("https://api.rembot.cc/images/nsfw/thighs");
-				HttpContent content = response.Content;
+			public ulong UserId;
+			public BigInteger Bal;
+			public BigInteger Xp;
+			public int Level;
+		}
 
-				string result = await content.ReadAsStringAsync();
-				if (response.StatusCode == HttpStatusCode.OK)
-				{
-					return result;
-				}
-				else
-				{
-					throw new HttpListenerException(int.Parse(response.StatusCode.ToString()), $"Server returned an error. {response.StatusCode} {result}");
-				}
-			}
+		public async Task<User> GetUser(ulong UserId)
+		{
+			HttpClient Client = new HttpClient();
+			Client.DefaultRequestHeaders.Add("Authorization", Token);
+			Client.DefaultRequestHeaders.Add("ClientId", ClientId.ToString());
+
+			var request = new HttpRequestMessage
+			{
+				Method = HttpMethod.Get,
+				RequestUri = new Uri("https://api.rembot.cc/api/v1/economy/user"),
+				Content = new StringContent($@"{{
+				""UserId"":""{UserId}""}}", Encoding.UTF8, "application/json"),
+			};
+			var response = await Client.SendAsync(request).ConfigureAwait(false);
+			response.EnsureSuccessStatusCode();
+			var responseInfo = await response.Content.ReadAsStringAsync();
+			User User = JsonSerializer.Deserialize<User>(responseInfo);
+			return User;
+		}
+
+		public async Task UpdateUser(ulong UserId, BigInteger Bal)
+		{
+			HttpClient Client = new HttpClient();
+			Client.DefaultRequestHeaders.Add("Authorization", Token);
+			Client.DefaultRequestHeaders.Add("ClientId", ClientId.ToString());
+
+			var request = new HttpRequestMessage
+			{
+				Method = HttpMethod.Put,
+				RequestUri = new Uri("https://api.rembot.cc/api/v1/economy/user"),
+				Content = new StringContent($@"{{
+				""UserId"":""{UserId}"",
+				""Bal"":""{Bal}""}}", Encoding.UTF8, "application/json"),
+			};
+			var response = await Client.SendAsync(request).ConfigureAwait(false);
+			response.EnsureSuccessStatusCode();
+			return;
 		}
 	}
 }
