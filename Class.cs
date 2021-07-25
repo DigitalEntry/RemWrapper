@@ -14,6 +14,8 @@ namespace RemAPIWrapper
 		private string Token;
 		private ulong ClientId;
 
+		private HttpClient Client = new HttpClient();
+
 		public RemAPI(string Token, ulong ClientId)
 		{
 			this.Token = Token;
@@ -25,7 +27,8 @@ namespace RemAPIWrapper
 			Rem = 0,
 			Emilia = 1,
 			Ram = 2,
-			Thighs = 3
+			Thighs = 3,
+			Neko = 4
 		}
 		/// <summary>Get an image with a certain type
 		/// <para>Returns <see cref="string"/></para>
@@ -36,12 +39,11 @@ namespace RemAPIWrapper
 			{
 				throw new Exception("NSFW must be true for Thighs endpoint");
 			}
-			else if ((Type == ImageType.Emilia || Type == ImageType.Ram) && !IsNSFW)
+			else if (Type == ImageType.Neko && !IsNSFW)
 			{
-				throw new Exception("No NSFW images for Emilia or Ram");
+				throw new Exception("NSFW must be true for Neko endpoint");
 			}
 
-			HttpClient Client = new HttpClient();
 			Client.DefaultRequestHeaders.Add("Authorization", Token);
 			Client.DefaultRequestHeaders.Add("ClientId", ClientId.ToString());
 
@@ -57,68 +59,6 @@ namespace RemAPIWrapper
 			response.EnsureSuccessStatusCode();
 			var responseInfo = await response.Content.ReadAsStringAsync();
 			return responseInfo;
-		}
-
-		public class User
-		{
-			public ulong UserId { get; private set; }
-			/// <summary>The amount of money a user has
-			/// </summary>
-			public BigInteger Bal { get; private set; }
-			/// <summary>The amount of experience points a user has
-			/// </summary>
-			public BigInteger Xp { get; private set; }
-
-			/// <summary>Checks if the user is blacklisted, If the user is blacklisted you will not be able to update them.
-			/// </summary>
-			public bool Blacklisted { get; private set; }
-			/// <summary>The level a user is, The more experience points they have the higher the level 
-			/// </summary>
-			public int Level { get; private set; }
-		}
-
-		/// <summary>Get a users information
-		/// <para>Returns <see cref="User"/></para>
-		/// </summary>
-		public async Task<User> GetUser(ulong UserId)
-		{
-			HttpClient Client = new HttpClient();
-			Client.DefaultRequestHeaders.Add("Authorization", Token);
-			Client.DefaultRequestHeaders.Add("ClientId", ClientId.ToString());
-
-			var request = new HttpRequestMessage
-			{
-				Method = HttpMethod.Get,
-				RequestUri = new Uri("https://api.rembot.cc/api/v1/economy/user"),
-				Content = new StringContent($@"{{
-				""UserId"":""{UserId}""}}", Encoding.UTF8, "application/json"),
-			};
-			var response = await Client.SendAsync(request).ConfigureAwait(false);
-			response.EnsureSuccessStatusCode();
-			var responseInfo = await response.Content.ReadAsStringAsync();
-			User User = JsonSerializer.Deserialize<User>(responseInfo);
-			return User;
-		}
-
-		/// <summary>Update a users balance, you can only update the same user every 15 seconds
-		/// </summary>
-		public async Task UpdateUser(ulong UserId, BigInteger Bal)
-		{
-			HttpClient Client = new HttpClient();
-			Client.DefaultRequestHeaders.Add("Authorization", Token);
-			Client.DefaultRequestHeaders.Add("ClientId", ClientId.ToString());
-
-			var request = new HttpRequestMessage
-			{
-				Method = HttpMethod.Put,
-				RequestUri = new Uri("https://api.rembot.cc/api/v1/economy/user"),
-				Content = new StringContent($@"{{
-				""UserId"":""{UserId}"",
-				""Bal"":""{Bal}""}}", Encoding.UTF8, "application/json"),
-			};
-			var response = await Client.SendAsync(request).ConfigureAwait(false);
-			response.EnsureSuccessStatusCode();
-			return;
 		}
 	}
 }
